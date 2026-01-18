@@ -11,10 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        :root { --t-yellow: #FFD700; --t-blue: #4169E1; --t-dark: #121212; }
+        :root { --t-yellow: #FFD700; --t-blue: #4169E1; --t-dark: #121212; --t-danger: #dc3545; }
         body, html { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #f0f0f0; }
         
-        /* Header Premium */
         .app-header {
             position: absolute; top: 0; width: 100%; z-index: 2000;
             background: white; padding: 12px 20px; border-bottom: 3px solid var(--t-yellow);
@@ -23,10 +22,8 @@
         }
         .logo-sq { background: var(--t-blue); color: white; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid var(--t-yellow); }
 
-        /* Carte Plein Écran */
         #map { height: 100vh; width: 100%; position: absolute; z-index: 1; }
 
-        /* Panneau de Commande */
         .tambola-card {
             position: absolute; bottom: 0; width: 100%; max-width: 500px; 
             left: 50%; transform: translateX(-50%);
@@ -36,30 +33,23 @@
 
         .search-area { background: #f8f9fa; border-radius: 20px; padding: 10px; margin-bottom: 15px; }
         .input-row { display: flex; align-items: center; padding: 8px 5px; border-bottom: 1px solid #eee; }
-        .input-row:last-child { border-bottom: none; }
-        .input-row input { border: none; background: transparent; width: 100%; font-weight: 600; outline: none; margin-left: 10px; font-size: 0.9rem; }
+        .input-row input { border: none; background: transparent; width: 100%; font-weight: 600; outline: none; margin-left: 10px; font-size: 0.85rem; }
 
-        /* Grille de Transport */
         .transport-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .transport-item { border: 2px solid #eee; border-radius: 18px; padding: 10px; text-align: center; cursor: pointer; transition: 0.3s; }
         .transport-item.active { border-color: var(--t-blue); background: #f0f4ff; transform: translateY(-3px); }
-        .price-tag { display: block; font-weight: 800; font-size: 0.8rem; margin-top: 5px; color: var(--t-blue); }
-
-        /* Suggestions de Quartiers */
+        
         #suggestions {
             position: absolute; background: white; width: calc(100% - 40px);
-            border-radius: 15px; bottom: 410px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-height: 220px; overflow-y: auto; z-index: 1005; display: none;
+            border-radius: 15px; bottom: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-height: 200px; overflow-y: auto; z-index: 1005; display: none;
         }
         .suggestion-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 0.85rem; }
-        .suggestion-item:hover { background: #f8f9fa; color: var(--t-blue); }
 
-        .btn-confirm { background: var(--t-dark); color: white; border: none; width: 100%; padding: 16px; border-radius: 18px; font-weight: 800; transition: 0.2s; }
-        .btn-confirm:active { transform: scale(0.98); }
-        
+        .modal-content { border-radius: 25px; border: none; }
+        .icon-box { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px; }
+        .btn-confirm { background: var(--t-dark); color: white; border: none; width: 100%; padding: 16px; border-radius: 18px; font-weight: 800; }
         .stat-pill { background: #f0f0f0; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-        .gps-dot { width: 10px; height: 10px; background: #28a745; border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
     </style>
 </head>
 <body>
@@ -68,97 +58,175 @@
     <div class="d-flex align-items-center gap-2">
         <div class="logo-sq">T</div>
         <div>
-            <span class="fw-bold d-block" style="line-height: 1.1;">TAMBOLA</span>
-            <small class="text-primary fw-bold" style="font-size: 0.6rem;">LEMBA • LIMETE • MATETE</small>
+            <span class="fw-bold d-block">TAMBOLA</span>
+            <small id="weather-info" class="text-primary fw-bold" style="font-size: 0.6rem;"><i class="bi bi-cloud-sun"></i> ANALYSE MÉTÉO...</small>
         </div>
     </div>
     <div class="d-flex gap-2">
-        <div class="stat-pill"><i class="bi bi-geo-fill"></i> <span id="s-trips">0</span></div>
-        <div class="stat-pill"><i class="bi bi-clock-history"></i> <span id="s-mins">0</span>m</div>
+        <div class="stat-pill"><span id="s-trips">0</span> km</div>
+        <div class="stat-pill"><span id="s-mins">0</span> min</div>
     </div>
 </header>
 
 <div id="map"></div>
 <div id="suggestions"></div>
 
+<div class="modal fade" id="surgeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered px-4">
+        <div class="modal-content text-center p-4 shadow-lg">
+            <div id="modalIconBox" class="icon-box"></div>
+            <h4 class="fw-800" id="modalTitle">Alerte</h4>
+            <p id="modalText" class="text-muted"></p>
+            <button type="button" class="btn btn-dark w-100 py-3 rounded-4 fw-bold" data-bs-dismiss="modal">COMPRIS</button>
+        </div>
+    </div>
+</div>
+
 <div class="tambola-card">
     <div class="search-area">
         <div class="input-row">
-            <div class="gps-dot"></div>
-            <input type="text" id="origin" value="Recherche GPS..." readonly>
+            <i class="bi bi-geo-fill text-success"></i>
+            <input type="text" id="origin" value="Ma Position..." readonly>
         </div>
         <div class="input-row">
             <i class="bi bi-geo-alt text-warning"></i>
-            <input type="text" id="stopover" placeholder="Ajouter une escale (ex: Righini)" oninput="searchQuartier(this.value, 'stop')">
+            <input type="text" id="stopover" placeholder="Escale (3 Communes)" oninput="searchQuartier(this.value, 'stop')">
         </div>
         <div class="input-row">
             <i class="bi bi-flag-fill text-danger"></i>
-            <input type="text" id="destination" placeholder="Destination (ex: Terminus)" oninput="searchQuartier(this.value, 'dest')">
+            <input type="text" id="destination" placeholder="Où allez-vous ?" oninput="searchQuartier(this.value, 'dest')">
         </div>
     </div>
 
     <div class="transport-grid">
         <div class="transport-item active" onclick="setActive(this)">
             <i class="bi bi-bicycle fs-5"></i><br><small>Moto</small>
-            <span class="price-tag" id="p-moto">-- FC</span>
+            <span class="price-tag fw-bold" id="p-moto">-- FC</span>
         </div>
         <div class="transport-item" onclick="setActive(this)">
             <i class="bi bi-car-front fs-5"></i><br><small>Taxi</small>
-            <span class="price-tag" id="p-taxi">-- FC</span>
+            <span class="price-tag fw-bold" id="p-taxi">-- FC</span>
         </div>
         <div class="transport-item" onclick="setActive(this)">
             <i class="bi bi-award-fill fs-5"></i><br><small>VIP</small>
-            <span class="price-tag" id="p-vip">-- FC</span>
+            <span class="price-tag fw-bold" id="p-vip">-- FC</span>
         </div>
     </div>
 
-    <button class="btn-confirm shadow" onclick="bookNow()">CONFIRMER MA COURSE</button>
+    <button class="btn-confirm shadow" onclick="bookNow()">CONFIRMER LE TRAJET</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-    // 1. Configuration Carte
     const map = L.map('map', { zoomControl: false }).setView([-4.37, 15.34], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // 2. Base de données des vrais quartiers kinois
+    // 1. Zones Inondables Connues (Cercles Rouges)
+    const dangerZones = [
+        { n: "Petit Pont (Matete)", coords: [-4.385, 15.365], radius: 200 },
+        { n: "Bypass (Lemba Righini)", coords: [-4.402, 15.318], radius: 250 },
+        { n: "Zone Kingabwa (Limete)", coords: [-4.331, 15.355], radius: 400 }
+    ];
+
+    dangerZones.forEach(zone => {
+        L.circle(zone.coords, {
+            color: 'red', fillColor: '#f03', fillOpacity: 0.3, radius: zone.radius
+        }).addTo(map).bindPopup("Attention : Zone Inondable");
+    });
+
     const quartiers = [
-        { n: "Limete Échangeur", lat: -4.3585, lng: 15.3418 },
-        { n: "Limete 7ème Rue (Place commerciale)", lat: -4.3465, lng: 15.3285 },
-        { n: "Limete Kingabwa", lat: -4.3282, lng: 15.3551 },
-        { n: "Lemba Terminus", lat: -4.3985, lng: 15.3345 },
-        { n: "Lemba Super", lat: -4.3852, lng: 15.3255 },
-        { n: "Lemba Salongo", lat: -4.4121, lng: 15.3381 },
-        { n: "Lemba Righini", lat: -4.4015, lng: 15.3185 },
-        { n: "Matete Marché", lat: -4.3881, lng: 15.3562 },
-        { n: "Matete Debonhomme", lat: -4.3725, lng: 15.3621 },
-        { n: "Matete Quartier 13", lat: -4.3952, lng: 15.3685 }
+        { n: "Limete Échangeur", lat: -4.3585, lng: 15.3418, c: "Limete" },
+        { n: "Limete Kingabwa", lat: -4.3282, lng: 15.3551, c: "Limete" },
+        { n: "Lemba Terminus", lat: -4.3985, lng: 15.3345, c: "Lemba" },
+        { n: "Lemba Righini", lat: -4.4015, lng: 15.3185, c: "Lemba" },
+        { n: "Matete Marché", lat: -4.3881, lng: 15.3562, c: "Matete" },
+        { n: "Matete Debonhomme", lat: -4.3725, lng: 15.3621, c: "Matete" }
     ];
 
     let markers = { origin: L.marker([-4.37, 15.34]).addTo(map), stop: null, dest: null };
     let routeLine = null;
-    let currentFocus = '';
-    let totalKm = 0;
+    let isRaining = false;
+    const bsModal = new bootstrap.Modal(document.getElementById('surgeModal'));
 
-    // 3. Géolocalisation Native au démarrage
-    window.onload = function() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(p => {
-                const myPos = [p.coords.latitude, p.coords.longitude];
-                markers.origin.setLatLng(myPos);
-                map.setView(myPos, 15);
-                document.getElementById('origin').value = "Ma Position (GPS Activé)";
-            });
+    // 2. Détecter la Météo Réelle à Kinshasa
+    async function checkWeather() {
+        try {
+            // Utilisation d'une API Météo (Clé démo)
+            const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=-4.32&lon=15.31&appid=8af9448866e4a2e582b1be7df969e262&units=metric`);
+            const data = await res.json();
+            const weatherDesc = data.weather[0].main.toLowerCase();
+            isRaining = weatherDesc.includes('rain') || weatherDesc.includes('drizzle');
+            
+            document.getElementById('weather-info').innerHTML = `<i class="bi bi-thermometer-half"></i> ${Math.round(data.main.temp)}°C | ${isRaining ? 'PLUIE' : 'CIEL DÉGAGÉ'}`;
+        } catch (e) { console.log("Météo indisponible"); }
+    }
+
+    function triggerPopup(type) {
+        const box = document.getElementById('modalIconBox');
+        const title = document.getElementById('modalTitle');
+        const text = document.getElementById('modalText');
+
+        if(type === 'flood') {
+            box.className = "icon-box bg-danger-subtle text-danger";
+            box.innerHTML = '<i class="bi bi-water"></i>';
+            title.innerText = "Zone Inondée";
+            text.innerText = "Votre itinéraire traverse une zone à fort risque d'inondation. Soyez prudent.";
+        } else if(type === 'rain') {
+            box.className = "icon-box bg-info-subtle text-info";
+            box.innerHTML = '<i class="bi bi-cloud-rain-fill"></i>';
+            title.innerText = "Météo Pluvieuse";
+            text.innerText = "La pluie a été détectée à Kinshasa. Une majoration de sécurité de 25% est appliquée.";
         }
-        refreshStats();
-    };
+        bsModal.show();
+    }
 
-    // 4. Moteur de recherche de quartiers
+    async function updateRoute() {
+        const pts = [markers.origin.getLatLng()];
+        if(markers.stop) pts.push(markers.stop.getLatLng());
+        if(markers.dest) pts.push(markers.dest.getLatLng());
+
+        if(pts.length > 1) {
+            const coords = pts.map(p => `${p.lng},${p.lat}`).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const route = data.routes[0];
+
+                let km = route.distance / 1000;
+                let mins = route.duration / 60;
+                
+                if(isRaining) { triggerPopup('rain'); }
+                
+                // Vérifier si la route passe près d'une zone rouge
+                const passesFlood = dangerZones.some(z => markers.dest.getLatLng().distanceTo(z.coords) < 1000);
+                if(passesFlood) triggerPopup('flood');
+
+                let surge = isRaining ? 1.25 : 1.0;
+
+                if(routeLine) map.removeLayer(routeLine);
+                routeLine = L.geoJSON(route.geometry, {style: {color: '#4169E1', weight: 6}}).addTo(map);
+                map.fitBounds(routeLine.getBounds(), {padding: [50, 150]});
+
+                document.getElementById('s-trips').innerText = km.toFixed(1);
+                document.getElementById('s-mins').innerText = Math.round(mins * (isRaining ? 1.5 : 1.1));
+                
+                const stopVal = markers.stop ? 2000 : 0;
+                document.getElementById('p-moto').innerText = Math.round((km * 850 + 1200 + stopVal) * surge) + " FC";
+                document.getElementById('p-taxi').innerText = Math.round((km * 1600 + 3500 + stopVal) * surge) + " FC";
+                document.getElementById('p-vip').innerText = Math.round((km * 4000 + 8000 + stopVal) * surge) + " FC";
+
+            } catch (e) { }
+        }
+    }
+
     function searchQuartier(q, type) {
         currentFocus = type;
         const list = document.getElementById("suggestions");
         if (q.length < 1) { list.style.display="none"; return; }
-
         const filtered = quartiers.filter(item => item.n.toLowerCase().includes(q.toLowerCase()));
         list.innerHTML = "";
         if(filtered.length > 0) {
@@ -166,64 +234,42 @@
             filtered.forEach(item => {
                 const d = document.createElement("div");
                 d.className = "suggestion-item";
-                d.innerHTML = `<i class="bi bi-geo-alt-fill text-primary me-2"></i><strong>${item.n}</strong>`;
-                d.onclick = () => selectLoc(item);
+                d.innerHTML = `<strong>${item.n}</strong> <small>${item.c}</small>`;
+                d.onclick = () => {
+                    document.getElementById(currentFocus === 'stop' ? 'stopover' : 'destination').value = item.n;
+                    list.style.display = "none";
+                    if (markers[currentFocus]) map.removeLayer(markers[currentFocus]);
+                    markers[currentFocus] = L.marker([item.lat, item.lng]).addTo(map);
+                    updateRoute();
+                };
                 list.appendChild(d);
             });
-        } else { list.style.display="none"; }
-    }
-
-    function selectLoc(item) {
-        document.getElementById(currentFocus === 'stop' ? 'stopover' : 'destination').value = item.n;
-        document.getElementById("suggestions").style.display = "none";
-        
-        if (markers[currentFocus]) map.removeLayer(markers[currentFocus]);
-        markers[currentFocus] = L.marker([item.lat, item.lng]).addTo(map);
-        
-        updateRoute();
-    }
-
-    function updateRoute() {
-        const pts = [markers.origin.getLatLng()];
-        if(markers.stop) pts.push(markers.stop.getLatLng());
-        if(markers.dest) pts.push(markers.dest.getLatLng());
-
-        if(routeLine) map.removeLayer(routeLine);
-        if(pts.length > 1) {
-            routeLine = L.polyline(pts, {color: '#4169E1', weight: 5, dashArray: '8, 12'}).addTo(map);
-            map.fitBounds(routeLine.getBounds(), {padding: [50, 150]});
-            
-            totalKm = 0;
-            for(let i=0; i<pts.length-1; i++) totalKm += pts[i].distanceTo(pts[i+1]);
-            totalKm /= 1000;
-            
-            const stopExtra = markers.stop ? 1500 : 0;
-            document.getElementById('p-moto').innerText = Math.round(totalKm * 750 + 1000 + stopExtra) + " FC";
-            document.getElementById('p-taxi').innerText = Math.round(totalKm * 1400 + 2500 + stopExtra) + " FC";
-            document.getElementById('p-vip').innerText = Math.round(totalKm * 3200 + 6000 + (stopExtra*2)) + " FC";
+        } else {
+            list.innerHTML = "<div class='p-3 text-muted small'>Limete, Lemba ou Matete uniquement.</div>";
+            list.style.display = "block";
         }
-    }
-
-    function bookNow() {
-        if(!markers.dest) return alert("Veuillez choisir une destination à Lemba, Limete ou Matete");
-        const estMins = Math.round(totalKm * 8); 
-        const db = JSON.parse(localStorage.getItem('tambola_final')) || {t:0, m:0};
-        db.t += 1; db.m += estMins;
-        localStorage.setItem('tambola_final', JSON.stringify(db));
-        alert(`Course confirmée vers ${document.getElementById('destination').value} !\nChauffeur en route.`);
-        refreshStats();
-    }
-
-    function refreshStats() {
-        const db = JSON.parse(localStorage.getItem('tambola_final')) || {t:0, m:0};
-        document.getElementById('s-trips').innerText = db.t;
-        document.getElementById('s-mins').innerText = db.m;
     }
 
     function setActive(el) {
         document.querySelectorAll('.transport-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
     }
+
+    function bookNow() {
+        if(!markers.dest) return alert("Veuillez choisir une destination.");
+        alert("Recherche d'un chauffeur Tambola...");
+    }
+
+    window.onload = () => {
+        checkWeather();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(p => {
+                const myPos = [p.coords.latitude, p.coords.longitude];
+                markers.origin.setLatLng(myPos);
+                map.setView(myPos, 15);
+            });
+        }
+    };
 </script>
 </body>
-</html>
+    </html>
