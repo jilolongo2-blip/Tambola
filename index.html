@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambola Kinshasa | GPS & 3 Communes</title>
+    <title>Tambola Kinshasa | Elite Edition</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -14,7 +14,7 @@
         :root { --t-yellow: #FFD700; --t-blue: #4169E1; --t-dark: #121212; }
         body, html { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; background: #f0f0f0; }
         
-        /* Header */
+        /* Header Premium */
         .app-header {
             position: absolute; top: 0; width: 100%; z-index: 2000;
             background: white; padding: 12px 20px; border-bottom: 3px solid var(--t-yellow);
@@ -23,10 +23,10 @@
         }
         .logo-sq { background: var(--t-blue); color: white; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid var(--t-yellow); }
 
-        /* Map */
+        /* Carte Plein Écran */
         #map { height: 100vh; width: 100%; position: absolute; z-index: 1; }
 
-        /* Card UI */
+        /* Panneau de Commande */
         .tambola-card {
             position: absolute; bottom: 0; width: 100%; max-width: 500px; 
             left: 50%; transform: translateX(-50%);
@@ -39,25 +39,26 @@
         .input-row:last-child { border-bottom: none; }
         .input-row input { border: none; background: transparent; width: 100%; font-weight: 600; outline: none; margin-left: 10px; font-size: 0.9rem; }
 
-        /* Transport */
+        /* Grille de Transport */
         .transport-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .transport-item { border: 2px solid #eee; border-radius: 18px; padding: 10px; text-align: center; cursor: pointer; transition: 0.3s; }
-        .transport-item.active { border-color: var(--t-blue); background: #f0f4ff; transform: scale(1.02); }
+        .transport-item.active { border-color: var(--t-blue); background: #f0f4ff; transform: translateY(-3px); }
         .price-tag { display: block; font-weight: 800; font-size: 0.8rem; margin-top: 5px; color: var(--t-blue); }
 
-        /* Autocomplete */
+        /* Suggestions de Quartiers */
         #suggestions {
             position: absolute; background: white; width: calc(100% - 40px);
             border-radius: 15px; bottom: 410px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-height: 180px; overflow-y: auto; z-index: 1005; display: none;
+            max-height: 220px; overflow-y: auto; z-index: 1005; display: none;
         }
         .suggestion-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 0.85rem; }
+        .suggestion-item:hover { background: #f8f9fa; color: var(--t-blue); }
 
-        .btn-main { background: var(--t-dark); color: white; border: none; width: 100%; padding: 16px; border-radius: 18px; font-weight: 800; font-size: 1rem; }
-        .stat-pill { background: #f0f0f0; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: #444; }
-
-        /* GPS Status Pulse */
-        .gps-pulse { width: 10px; height: 10px; background: #28a745; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 0 rgba(40, 167, 69, 0.4); animation: pulse 2s infinite; }
+        .btn-confirm { background: var(--t-dark); color: white; border: none; width: 100%; padding: 16px; border-radius: 18px; font-weight: 800; transition: 0.2s; }
+        .btn-confirm:active { transform: scale(0.98); }
+        
+        .stat-pill { background: #f0f0f0; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .gps-dot { width: 10px; height: 10px; background: #28a745; border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
     </style>
 </head>
@@ -68,7 +69,7 @@
         <div class="logo-sq">T</div>
         <div>
             <span class="fw-bold d-block" style="line-height: 1.1;">TAMBOLA</span>
-            <small class="text-primary fw-bold" style="font-size: 0.6rem;">GPS LIVE • KINSHASA</small>
+            <small class="text-primary fw-bold" style="font-size: 0.6rem;">LEMBA • LIMETE • MATETE</small>
         </div>
     </div>
     <div class="d-flex gap-2">
@@ -83,16 +84,16 @@
 <div class="tambola-card">
     <div class="search-area">
         <div class="input-row">
-            <div id="gps-indicator" class="gps-pulse"></div>
-            <input type="text" id="origin" placeholder="Recherche de votre position..." value="Position GPS en cours..." readonly>
+            <div class="gps-dot"></div>
+            <input type="text" id="origin" value="Recherche GPS..." readonly>
         </div>
         <div class="input-row">
-            <i class="bi bi-plus-circle-fill text-warning"></i>
-            <input type="text" id="stopover" placeholder="Ajouter un arrêt (Escale)" oninput="filterSearch(this.value, 'stop')">
+            <i class="bi bi-geo-alt text-warning"></i>
+            <input type="text" id="stopover" placeholder="Ajouter une escale (ex: Righini)" oninput="searchQuartier(this.value, 'stop')">
         </div>
         <div class="input-row">
-            <i class="bi bi-geo-alt-fill text-danger"></i>
-            <input type="text" id="destination" placeholder="Destination (Lemba, Limete, Matete)" oninput="filterSearch(this.value, 'dest')">
+            <i class="bi bi-flag-fill text-danger"></i>
+            <input type="text" id="destination" placeholder="Destination (ex: Terminus)" oninput="searchQuartier(this.value, 'dest')">
         </div>
     </div>
 
@@ -111,117 +112,112 @@
         </div>
     </div>
 
-    <button class="btn-main shadow" onclick="bookTrip()">COMMANDER LA COURSE</button>
+    <button class="btn-confirm shadow" onclick="bookNow()">CONFIRMER MA COURSE</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // 1. Initialisation Carte
-    const defaultPos = [-4.325, 15.322]; // Centre Kinshasa
-    const map = L.map('map', { zoomControl: false }).setView(defaultPos, 13);
+    // 1. Configuration Carte
+    const map = L.map('map', { zoomControl: false }).setView([-4.37, 15.34], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    let markers = { origin: L.marker(defaultPos).addTo(map), stop: null, dest: null };
-    let routePath = null;
-    let currentInput = '';
-    let distance = 0;
+    // 2. Base de données des vrais quartiers kinois
+    const quartiers = [
+        { n: "Limete Échangeur", lat: -4.3585, lng: 15.3418 },
+        { n: "Limete 7ème Rue (Place commerciale)", lat: -4.3465, lng: 15.3285 },
+        { n: "Limete Kingabwa", lat: -4.3282, lng: 15.3551 },
+        { n: "Lemba Terminus", lat: -4.3985, lng: 15.3345 },
+        { n: "Lemba Super", lat: -4.3852, lng: 15.3255 },
+        { n: "Lemba Salongo", lat: -4.4121, lng: 15.3381 },
+        { n: "Lemba Righini", lat: -4.4015, lng: 15.3185 },
+        { n: "Matete Marché", lat: -4.3881, lng: 15.3562 },
+        { n: "Matete Debonhomme", lat: -4.3725, lng: 15.3621 },
+        { n: "Matete Quartier 13", lat: -4.3952, lng: 15.3685 }
+    ];
 
-    // 2. Module GPS Automatique au démarrage
+    let markers = { origin: L.marker([-4.37, 15.34]).addTo(map), stop: null, dest: null };
+    let routeLine = null;
+    let currentFocus = '';
+    let totalKm = 0;
+
+    // 3. Géolocalisation Native au démarrage
     window.onload = function() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const myCoords = [pos.coords.latitude, pos.coords.longitude];
-                    markers.origin.setLatLng(myCoords);
-                    map.setView(myCoords, 15);
-                    document.getElementById('origin').value = "Ma Position Actuelle";
-                    document.getElementById('gps-indicator').style.background = "#28a745";
-                },
-                (err) => {
-                    document.getElementById('origin').value = "GPS non autorisé";
-                    document.getElementById('gps-indicator').style.background = "#dc3545";
-                    alert("Pour une meilleure expérience, activez votre GPS.");
-                },
-                { enableHighAccuracy: true }
-            );
+            navigator.geolocation.getCurrentPosition(p => {
+                const myPos = [p.coords.latitude, p.coords.longitude];
+                markers.origin.setLatLng(myPos);
+                map.setView(myPos, 15);
+                document.getElementById('origin').value = "Ma Position (GPS Activé)";
+            });
         }
-        updateUI();
+        refreshStats();
     };
 
-    // 3. Recherche Filtrée (Lemba, Limete, Matete)
-    async function filterSearch(query, type) {
-        currentInput = type;
+    // 4. Moteur de recherche de quartiers
+    function searchQuartier(q, type) {
+        currentFocus = type;
         const list = document.getElementById("suggestions");
-        if (query.length < 2) { list.style.display="none"; return; }
+        if (q.length < 1) { list.style.display="none"; return; }
 
-        const allowed = ["lemba", "limete", "matete"];
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}+kinshasa&countrycodes=cd&limit=15`);
-        const data = await res.json();
-        
-        const filtered = data.filter(item => 
-            allowed.some(commune => item.display_name.toLowerCase().includes(commune))
-        );
-
+        const filtered = quartiers.filter(item => item.n.toLowerCase().includes(q.toLowerCase()));
         list.innerHTML = "";
         if(filtered.length > 0) {
             list.style.display = "block";
             filtered.forEach(item => {
                 const d = document.createElement("div");
                 d.className = "suggestion-item";
-                d.innerHTML = `<strong>${item.display_name.split(',')[0]}</strong> <small class="text-muted">RDC</small>`;
-                d.onclick = () => selectLocation(item);
+                d.innerHTML = `<i class="bi bi-geo-alt-fill text-primary me-2"></i><strong>${item.n}</strong>`;
+                d.onclick = () => selectLoc(item);
                 list.appendChild(d);
             });
-        }
+        } else { list.style.display="none"; }
     }
 
-    function selectLocation(item) {
-        const coords = [parseFloat(item.lat), parseFloat(item.lon)];
-        document.getElementById(currentInput === 'stop' ? 'stopover' : 'destination').value = item.display_name.split(',')[0];
+    function selectLoc(item) {
+        document.getElementById(currentFocus === 'stop' ? 'stopover' : 'destination').value = item.n;
         document.getElementById("suggestions").style.display = "none";
         
-        if (markers[currentInput]) map.removeLayer(markers[currentInput]);
-        markers[currentInput] = L.marker(coords).addTo(map);
-        calculateRoute();
+        if (markers[currentFocus]) map.removeLayer(markers[currentFocus]);
+        markers[currentFocus] = L.marker([item.lat, item.lng]).addTo(map);
+        
+        updateRoute();
     }
 
-    // 4. Calcul Itinéraire & Prix
-    function calculateRoute() {
+    function updateRoute() {
         const pts = [markers.origin.getLatLng()];
-        if (markers.stop) pts.push(markers.stop.getLatLng());
-        if (markers.dest) pts.push(markers.dest.getLatLng());
+        if(markers.stop) pts.push(markers.stop.getLatLng());
+        if(markers.dest) pts.push(markers.dest.getLatLng());
 
-        if (routePath) map.removeLayer(routePath);
-        if (pts.length > 1) {
-            routePath = L.polyline(pts, {color: '#4169E1', weight: 5, dashArray: '5, 10'}).addTo(map);
-            map.fitBounds(routePath.getBounds(), {padding: [50, 150]});
+        if(routeLine) map.removeLayer(routeLine);
+        if(pts.length > 1) {
+            routeLine = L.polyline(pts, {color: '#4169E1', weight: 5, dashArray: '8, 12'}).addTo(map);
+            map.fitBounds(routeLine.getBounds(), {padding: [50, 150]});
             
-            distance = 0;
-            for(let i=0; i<pts.length-1; i++) distance += pts[i].distanceTo(pts[i+1]);
-            distance /= 1000;
+            totalKm = 0;
+            for(let i=0; i<pts.length-1; i++) totalKm += pts[i].distanceTo(pts[i+1]);
+            totalKm /= 1000;
             
-            // Tarifs en FC (Francs Congolais)
-            const stopBonus = markers.stop ? 1500 : 0;
-            document.getElementById('p-moto').innerText = Math.round(distance * 650 + 1000 + stopBonus) + " FC";
-            document.getElementById('p-taxi').innerText = Math.round(distance * 1300 + 2500 + stopBonus) + " FC";
-            document.getElementById('p-vip').innerText = Math.round(distance * 3000 + 5000 + (stopBonus*2)) + " FC";
+            const stopExtra = markers.stop ? 1500 : 0;
+            document.getElementById('p-moto').innerText = Math.round(totalKm * 750 + 1000 + stopExtra) + " FC";
+            document.getElementById('p-taxi').innerText = Math.round(totalKm * 1400 + 2500 + stopExtra) + " FC";
+            document.getElementById('p-vip').innerText = Math.round(totalKm * 3200 + 6000 + (stopExtra*2)) + " FC";
         }
     }
 
-    function bookTrip() {
-        if(!markers.dest) return alert("Veuillez choisir une destination (Lemba, Limete ou Matete)");
-        const mins = Math.round(distance * 7); // Temps moyen Kinshasa
-        const data = JSON.parse(localStorage.getItem('tambola_v3')) || {t:0, m:0};
-        data.t += 1; data.m += mins;
-        localStorage.setItem('tambola_v3', JSON.stringify(data));
-        alert(`Course confirmée ! Arrivée estimée dans ${mins} min.`);
-        updateUI();
+    function bookNow() {
+        if(!markers.dest) return alert("Veuillez choisir une destination à Lemba, Limete ou Matete");
+        const estMins = Math.round(totalKm * 8); 
+        const db = JSON.parse(localStorage.getItem('tambola_final')) || {t:0, m:0};
+        db.t += 1; db.m += estMins;
+        localStorage.setItem('tambola_final', JSON.stringify(db));
+        alert(`Course confirmée vers ${document.getElementById('destination').value} !\nChauffeur en route.`);
+        refreshStats();
     }
 
-    function updateUI() {
-        const data = JSON.parse(localStorage.getItem('tambola_v3')) || {t:0, m:0};
-        document.getElementById('s-trips').innerText = data.t;
-        document.getElementById('s-mins').innerText = data.m;
+    function refreshStats() {
+        const db = JSON.parse(localStorage.getItem('tambola_final')) || {t:0, m:0};
+        document.getElementById('s-trips').innerText = db.t;
+        document.getElementById('s-mins').innerText = db.m;
     }
 
     function setActive(el) {
